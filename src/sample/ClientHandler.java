@@ -10,7 +10,7 @@ public class ClientHandler implements Runnable {
     private final Socket p1Socket;
     private final Socket p2Socket;
 
-    Double[][] boardState = new Double[6][7];
+    Integer[][] boardState = new Integer[6][7];
 
     public ClientHandler(Socket p1, Socket p2) {
         this.p1Socket = p1;
@@ -47,11 +47,11 @@ public class ClientHandler implements Runnable {
 
             try {
 
-                boardState = (Double[][])inputFromP1.readObject();
+                boardState = (Integer[][])inputFromP1.readObject();
                 outP2.writeObject(boardState);
                 outP2.flush();
                 if(!checkVictory()){
-                    boardState = (Double[][])inputFromP2.readObject();
+                    boardState = (Integer[][])inputFromP2.readObject();
                     outP1.writeObject(boardState);
                     outP1.flush();
                 }
