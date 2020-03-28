@@ -12,6 +12,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -68,6 +69,20 @@ public class Main extends Application {
                     }
                 });
 
+                temp.setOnMouseEntered(new EventHandler<MouseEvent>() {
+                    @Override
+                    public void handle(MouseEvent mouseEvent) {
+                        buttonHover(mouseEvent);
+                    }
+                });
+
+                temp.setOnMouseExited(new EventHandler<MouseEvent>() {
+                    @Override
+                    public void handle(MouseEvent mouseEvent) {
+                        buttonHoverLeave(mouseEvent);
+                    }
+                });
+
                 board.add(temp, j, i);
                 score[i][j] = 0;
                 buttons[i][j] = temp;
@@ -113,20 +128,54 @@ public class Main extends Application {
 
     }
 
+    private void buttonHover(MouseEvent mouseEvent){
+        String event = mouseEvent.getSource().toString();
+        int x = event.charAt(10) - 48;
+        int y = event.charAt(11) - 48;
+
+        if(allowedSquare(x,y)){
+            try {
+                Button temp = (Button)(mouseEvent.getSource());
+                temp.setGraphic(new ImageView(new Image(new FileInputStream("src/sample/green.png"))));
+                //board.add(new ImageView(new Image(new FileInputStream("src/sample/yellow.png"))),y,x); //image not button - change
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+        }else{
+            try {
+                Button temp = (Button)(mouseEvent.getSource());
+                temp.setGraphic(new ImageView(new Image(new FileInputStream("src/sample/red.png"))));
+                //board.add(new ImageView(new Image(new FileInputStream("src/sample/red.png"))),y,x);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void buttonHoverLeave(MouseEvent mouseEvent){
+
+        try {
+            Button temp = (Button)(mouseEvent.getSource());
+            temp.setGraphic(new ImageView(new Image(new FileInputStream("src/sample/empty.png"))));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
     private void buttonClicked(ActionEvent actionEvent){
         String event = actionEvent.getSource().toString();
-        int y = event.charAt(10) - 48;
-        int x = event.charAt(11) - 48;
+        int x = event.charAt(10) - 48;
+        int y = event.charAt(11) - 48;
 
         if(allowedSquare(x, y)){
 
             score[x][y] = playerNum;
             try {
                 if(playerNum==1){
-                    board.add(new ImageView(new Image(new FileInputStream("src/sample/yellowFilled.png"))),x,y);
+                    board.add(new ImageView(new Image(new FileInputStream("src/sample/yellowFilled.png"))),y,x);
                 }
                 else{
-                    board.add(new ImageView(new Image(new FileInputStream("src/sample/redFilled.png"))),x,y);
+                    board.add(new ImageView(new Image(new FileInputStream("src/sample/redFilled.png"))),y,x);
                 }
 
             } catch (FileNotFoundException e) {
@@ -154,12 +203,28 @@ public class Main extends Application {
         else{
             System.out.println("Not good move");
         }
-        System.out.println(x + "" + y);
+        //System.out.println(x + "" + y);
     }
 
     private boolean allowedSquare(int x, int y){
 
-        return true;
+        //makes sure the player isn't trying to click a taken slot
+        if(score[x][y] != 1 && score[x][y] != 2){
+
+            //for bottom row
+            if(score[5][y] == 0 && x == 5){
+
+                return true;
+            } //checks to make sure slot below is taken
+            else if(score[x+1][y] == 1 || score[x+1][y] == 2){
+
+                return true;
+
+            }
+
+        }
+
+        return false;
     }
 
 

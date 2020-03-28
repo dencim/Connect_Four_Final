@@ -71,8 +71,77 @@ public class ClientHandler implements Runnable {
 
 
     }
-
+//returns true if someone won
     public boolean checkVictory(){
-        return true;
+
+        int counter = 0;
+
+        //check across victory
+        for(int i=0;i<6;i++){
+
+            counter = 0;
+
+            for(int j=0;j<7;j++){
+
+                if(boardState[i][j] == 1){
+                    counter++;
+                } else {
+                    counter = 0; //reset b/c not in order
+                }
+
+                if(counter > 3){
+                    return true;
+                }
+
+            }
+        }
+
+        counter = 0;
+
+        //check down victory
+        for(int i=0;i<7;i++){
+            counter = 0;
+
+            for(int j=0;j<6;j++){
+
+                if(boardState[j][i] == 1) {
+                    counter++;
+                }else {
+                    counter = 0;
+                }
+                if(counter > 3){
+                    return true;
+                }
+
+
+            }
+        }
+
+        //Check diagonal up victory
+        for(int i=0;i<4;i++){
+            for(int j=3;j<6;j++){
+                //i is 4 and j is 3 to avoid Out of Bounds error when searching through array
+                if(boardState[j][i] == 1 && boardState[j-1][i+1] == 1 && boardState[j-2][i+2] == 1 && boardState[j-3][i+3] == 1){
+                    return true;
+                    //won by diagonal upward
+                }
+
+            }
+        }
+
+        //check diagonal down victory
+        for(int i=0;i<4;i++){
+            for(int j=0;j<3;j++){
+                if(boardState[j][i] == 1 && boardState[j+1][i+1] == 1 && boardState[j+2][i+2] == 1 && boardState[j+3][i+3] == 1){
+                    return true;
+                    //won by diagonal downward
+                }
+
+
+            }
+        }
+
+        return false; //nobody won
+
     }
 }
