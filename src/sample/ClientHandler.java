@@ -30,28 +30,49 @@ public class ClientHandler implements Runnable {
         try{
             inputFromP1 = new ObjectInputStream(p1Socket.getInputStream());
             outP1 = new ObjectOutputStream(p1Socket.getOutputStream());
+            outP1.writeChar('1');
+            outP1.flush();
 
             inputFromP2 = new ObjectInputStream(p2Socket.getInputStream());
             outP2 = new ObjectOutputStream(p2Socket.getOutputStream());
+            outP2.writeChar('2');
+            outP2.flush();
+
         }catch (IOException e){
             System.out.println("Error");
         }
 
-/*
+
         while(true){
 
             try {
 
+                boardState = (Double[][])inputFromP1.readObject();
+                outP2.writeObject(boardState);
+                outP2.flush();
+                if(!checkVictory()){
+                    boardState = (Double[][])inputFromP2.readObject();
+                    outP1.writeObject(boardState);
+                    outP1.flush();
+                }
+                else{
+                    System.out.println("P1 won");
+                }
 
 
-            } catch (IOException e) {
+
+            } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
             }
 
         }
-*/
 
 
 
+
+    }
+
+    public boolean checkVictory(){
+        return true;
     }
 }
