@@ -36,6 +36,8 @@ public class Main extends Application {
     GridPane board;
     Label turnLabel;
 
+    Button save = new Button("Save");
+
     boolean myTurn;
 
     @Override
@@ -43,7 +45,13 @@ public class Main extends Application {
         BorderPane pane = new BorderPane();
         turnLabel = new Label("Waiting for other Player");
         pane.setTop(turnLabel);
+        pane.setBottom(save);
         board = new GridPane();
+
+        save.setMaxWidth(250);
+        save.setPadding(new Insets(10, 10, 10, 10));
+        save.setStyle("-fx-text-fill: #000fff");
+
 
         Button temp;
         for(int i=0;i<6;i++){
@@ -82,6 +90,7 @@ public class Main extends Application {
             }
 
         }
+
 
 
         //System.out.println(System.getProperty("user.dir"));
