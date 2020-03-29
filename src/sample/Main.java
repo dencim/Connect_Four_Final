@@ -34,6 +34,7 @@ public class Main extends Application {
 
     volatile boolean myTurn;
     volatile boolean gameOver = false;
+    Button save = new Button("Save");
 
     @Override
     public void start(Stage primaryStage) throws Exception{
@@ -44,7 +45,14 @@ public class Main extends Application {
         turnLabel = new Label("...");
         top.getChildren().addAll(myName, turnLabel);
         pane.setTop(top);
+
+        pane.setBottom(save);
         board = new GridPane();
+
+        save.setMaxWidth(250);
+        save.setPadding(new Insets(10, 10, 10, 10));
+        save.setStyle("-fx-text-fill: #000fff");
+
 
         Button temp;
         for(int i=0;i<6;i++){
@@ -85,6 +93,7 @@ public class Main extends Application {
         }
 
 
+
         //System.out.println(System.getProperty("user.dir"));
         pane.setCenter(board);
         primaryStage.setTitle("Connect Four");
@@ -123,7 +132,7 @@ public class Main extends Application {
                 System.out.println(ex);
             }
 
-            while(true){
+            while(!gameOver){
 
                 System.out.println(myTurn);
 
@@ -180,6 +189,7 @@ public class Main extends Application {
 
         }).start();
 
+        System.out.println("Game OVER!");
 
     }
     //Show green or red outline depending on if allowed to place in slot
@@ -296,6 +306,7 @@ public class Main extends Application {
 
     private boolean allowedSquare(int x, int y){
 
+        System.out.println(gameOver);
         //makes sure the player isn't trying to click a taken slot
         if(score[x][y] != 1 && score[x][y] != 2 && myTurn==true && !gameOver){
 
