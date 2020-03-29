@@ -4,9 +4,7 @@ import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
-import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -14,9 +12,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
-import javafx.scene.shape.Shape;
 import javafx.stage.Stage;
 
 import java.io.*;
@@ -37,8 +32,8 @@ public class Main extends Application {
     Label myName;
     Label turnLabel;
 
-    boolean myTurn;
-    boolean gameOver = false;
+    volatile boolean myTurn;
+    volatile boolean gameOver = false;
 
     @Override
     public void start(Stage primaryStage) throws Exception{
@@ -128,25 +123,39 @@ public class Main extends Application {
                 System.out.println(ex);
             }
 
-            while(!gameOver){
+            while(true){
 
                 System.out.println(myTurn);
-                if(myTurn==false){
+
+                synchronized (this) {
+                    while(myTurn){
+                        try{
+                            this.wait();
+                        }catch (InterruptedException e){
+                            //error
+                        }
+                    }
+                }
+
+
                     try {
+                        System.out.println("Player 2 right away");
                         score = (Integer[][])fromServer.readObject();
+                        System.out.println("Player 2 should have");
+                        System.out.print(score);
                         if(score[0][0]==5){
                             //p1 won
+                            System.out.println("Player 1 won");
                             Platform.runLater(() -> {
                                 setOtherColor();
-                                turnLabel.setText("Player 1 Won!");
                                 gameOver = true;
                             });
                         }
                         else if(score[0][0]==6){
                             //p2 won
+                            System.out.println("Player 2 won");
                             Platform.runLater(() -> {
                                 setOtherColor();
-                                turnLabel.setText("Player 2 Won!");
                                 gameOver = true;
                             });
                         }
@@ -157,16 +166,14 @@ public class Main extends Application {
                     }
 
                     myTurn = true;
+
                     Platform.runLater(() -> {
                         setOtherColor();
-                        if(!gameOver){
-                            turnLabel.setText("Player " + playerNum + " Turn. Make a move");
-                        }
 
                     });
 
 
-                }
+
 
 
             }
@@ -230,19 +237,23 @@ public class Main extends Application {
                 e.printStackTrace();
             }
 
-
+            //Writing move to server
             new Thread(()->{
 
                 try {
 
+
                         //Sends board after move to server
                         toServer.writeObject(score);
+
+                    synchronized (this) {
                         myTurn = false;
-                        System.out.println("My turn: " + myTurn);
+                        this.notifyAll();
+                    }
+                        //System.out.println("My turn: " + myTurn);
 
                         Platform.runLater(() -> {
                             setOtherColor();
-                            turnLabel.setText("Other Players Turn...");
                         });
 
 

@@ -20,6 +20,8 @@ public class ClientHandler implements Runnable {
     @Override
     public void run() {
 
+
+
         ObjectInputStream inputFromP1 = null;
         ObjectOutputStream outP1 = null;
 
@@ -46,20 +48,11 @@ public class ClientHandler implements Runnable {
         while(true){
 
             try {
-                if(!checkVictory()){
-                    boardState = (Integer[][])inputFromP1.readObject();
-                    outP2.writeObject(boardState);
-                    outP2.flush();
-                }else{
-                    System.out.println("Player 2 won!");
-                    boardState[0][0]=6;
-                    outP2.writeObject(boardState);
-                    outP2.flush();
-                    outP1.writeObject(boardState);
-                    outP1.flush();
-                    break;
-                }
-                if(!checkVictory()){
+                boardState = (Integer[][])inputFromP1.readObject();
+                outP2.writeObject(boardState);
+                outP2.flush();
+
+                if(checkVictory(1) == false){
                     boardState = (Integer[][])inputFromP2.readObject();
                     outP1.writeObject(boardState);
                     outP1.flush();
@@ -67,6 +60,16 @@ public class ClientHandler implements Runnable {
                 else{
                     System.out.println("Player 1 won!");
                     boardState[0][0]=5;
+                    outP2.writeObject(boardState);
+                    outP2.flush();
+                    outP1.writeObject(boardState);
+                    outP1.flush();
+                    break;
+                }
+
+                if(checkVictory(2)){
+                    System.out.println("Player 2 won!");
+                    boardState[0][0]=6;
                     outP2.writeObject(boardState);
                     outP2.flush();
                     outP1.writeObject(boardState);
@@ -82,12 +85,12 @@ public class ClientHandler implements Runnable {
 
         }
 
-
+        System.out.println("gameOver");
 
 
     }
 //returns true if someone won
-    public boolean checkVictory(){
+public boolean checkVictory(int p){
 
         int counter = 0;
 
@@ -98,7 +101,7 @@ public class ClientHandler implements Runnable {
 
             for(int j=0;j<7;j++){
 
-                if(boardState[i][j] == 1){
+                if(boardState[i][j] == p){
                     counter++;
                 } else {
                     counter = 0; //reset b/c not in order
@@ -119,7 +122,7 @@ public class ClientHandler implements Runnable {
 
             for(int j=0;j<6;j++){
 
-                if(boardState[j][i] == 1) {
+                if(boardState[j][i] == p) {
                     counter++;
                 }else {
                     counter = 0;
@@ -136,7 +139,7 @@ public class ClientHandler implements Runnable {
         for(int i=0;i<4;i++){
             for(int j=3;j<6;j++){
                 //i is 4 and j is 3 to avoid Out of Bounds error when searching through array
-                if(boardState[j][i] == 1 && boardState[j-1][i+1] == 1 && boardState[j-2][i+2] == 1 && boardState[j-3][i+3] == 1){
+                if(boardState[j][i] == p && boardState[j-1][i+1] == p && boardState[j-2][i+2] == p && boardState[j-3][i+3] == p){
                     return true;
                     //won by diagonal upward
                 }
@@ -147,7 +150,7 @@ public class ClientHandler implements Runnable {
         //check diagonal down victory
         for(int i=0;i<4;i++){
             for(int j=0;j<3;j++){
-                if(boardState[j][i] == 1 && boardState[j+1][i+1] == 1 && boardState[j+2][i+2] == 1 && boardState[j+3][i+3] == 1){
+                if(boardState[j][i] == p && boardState[j+1][i+1] == p && boardState[j+2][i+2] == p && boardState[j+3][i+3] == p){
                     return true;
                     //won by diagonal downward
                 }
@@ -156,7 +159,7 @@ public class ClientHandler implements Runnable {
             }
         }
 
-        return false; //nobody won
+        return false; //did not win
 
     }
 }
