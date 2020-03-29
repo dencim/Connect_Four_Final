@@ -34,15 +34,21 @@ public class Main extends Application {
     int playerNum;
 
     GridPane board;
+    Label myName;
     Label turnLabel;
 
     boolean myTurn;
+    boolean gameOver = false;
 
     @Override
     public void start(Stage primaryStage) throws Exception{
         BorderPane pane = new BorderPane();
-        turnLabel = new Label("Waiting for other Player");
-        pane.setTop(turnLabel);
+        HBox top = new HBox(50);
+        top.setPadding(new Insets(15,15,15,15));
+        myName = new Label("Waiting for other Player");
+        turnLabel = new Label("...");
+        top.getChildren().addAll(myName, turnLabel);
+        pane.setTop(top);
         board = new GridPane();
 
         Button temp;
@@ -116,18 +122,34 @@ public class Main extends Application {
                     myTurn=false;
                 }
 
-                Platform.runLater(() -> turnLabel.setText("I am " + playerNum));
+                Platform.runLater(() -> myName.setText("I am Player " + playerNum));
             }
             catch (IOException ex){
                 System.out.println(ex);
             }
 
-            while(true){
+            while(!gameOver){
 
                 System.out.println(myTurn);
                 if(myTurn==false){
                     try {
                         score = (Integer[][])fromServer.readObject();
+                        if(score[0][0]==5){
+                            //p1 won
+                            Platform.runLater(() -> {
+                                setOtherColor();
+                                turnLabel.setText("Player 1 Won!");
+                                gameOver = true;
+                            });
+                        }
+                        else if(score[0][0]==6){
+                            //p2 won
+                            Platform.runLater(() -> {
+                                setOtherColor();
+                                turnLabel.setText("Player 2 Won!");
+                                gameOver = true;
+                            });
+                        }
                     } catch (IOException e) {
                         e.printStackTrace();
                     } catch (ClassNotFoundException e) {
@@ -137,7 +159,10 @@ public class Main extends Application {
                     myTurn = true;
                     Platform.runLater(() -> {
                         setOtherColor();
-                        //turnLabel.setText("I am " + playerNum + ". Next turn");
+                        if(!gameOver){
+                            turnLabel.setText("Player " + playerNum + " Turn. Make a move");
+                        }
+
                     });
 
 
@@ -214,12 +239,10 @@ public class Main extends Application {
                         toServer.writeObject(score);
                         myTurn = false;
                         System.out.println("My turn: " + myTurn);
-                        //Gets score from server (gets other players turn)
-                        //score = (Integer[][])fromServer.readObject();
 
                         Platform.runLater(() -> {
                             setOtherColor();
-                            turnLabel.setText("I am " + playerNum + ". Next turn");
+                            turnLabel.setText("Other Players Turn...");
                         });
 
 
@@ -263,7 +286,7 @@ public class Main extends Application {
     private boolean allowedSquare(int x, int y){
 
         //makes sure the player isn't trying to click a taken slot
-        if(score[x][y] != 1 && score[x][y] != 2 && myTurn==true){
+        if(score[x][y] != 1 && score[x][y] != 2 && myTurn==true && !gameOver){
 
             //for bottom row
             if(score[5][y] == 0 && x == 5){
