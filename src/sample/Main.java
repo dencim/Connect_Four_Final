@@ -2,21 +2,27 @@ package sample;
 
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
+import javafx.scene.SnapshotParameters;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
+import javax.imageio.ImageIO;
 import java.io.*;
 import java.net.Socket;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Main extends Application {
@@ -44,14 +50,16 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception{
         BorderPane pane = new BorderPane();
-        top = new HBox(50);
+        top = new HBox(100);
         top.setPadding(new Insets(15,15,15,15));
+
         myName = new Label("Waiting for other Player");
         winnerLabel = new Label("...");
-        top.getChildren().addAll(myName, winnerLabel);
+        top.getChildren().addAll(myName, winnerLabel, save);
         pane.setTop(top);
 
-        pane.setBottom(save);
+        save.setVisible(false);
+
         board = new GridPane();
 
         save.setMaxWidth(250);
@@ -96,6 +104,24 @@ public class Main extends Application {
             }
 
         }
+
+        save.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent actionEvent) {
+                WritableImage image = pane.snapshot(new SnapshotParameters(), null);
+
+                DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss");
+                LocalDateTime now = LocalDateTime.now();
+                //System.out.println(dtf.format(now));
+
+                try {
+                    ImageIO.write(SwingFXUtils.fromFXImage(image, null), "png", new File("src/sample/saved/game" + dtf.format(now) + ".png"));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        });
 
 
 
@@ -164,6 +190,7 @@ public class Main extends Application {
                                 gameOver.set(true);
                                 winnerLabel.setText("You Lost :( Player 1 Won");
                                 pane.setBackground(new Background(new BackgroundFill(Color.rgb(255, 0, 0), CornerRadii.EMPTY, Insets.EMPTY)));
+                                save.setVisible(true);
                             });
                         }
                         else if(checkVictory(2)){
@@ -174,6 +201,7 @@ public class Main extends Application {
                                 gameOver.set(true);
                                 winnerLabel.setText("You Lost :( Player 1 Won");
                                 pane.setBackground(new Background(new BackgroundFill(Color.rgb(255, 0, 0), CornerRadii.EMPTY, Insets.EMPTY)));
+                                save.setVisible(true);
                             });
                         }
                     } catch (IOException e) {
@@ -274,6 +302,7 @@ public class Main extends Application {
                         if(gameOver.get()){
                             winnerLabel.setText("You Win!");
                             top.setBackground(new Background(new BackgroundFill(Color.rgb(50, 205, 50), CornerRadii.EMPTY, Insets.EMPTY)));
+                            save.setVisible(true);
                         }
                         myTurn.set(false);
                         this.notifyAll();
