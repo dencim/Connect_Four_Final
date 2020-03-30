@@ -12,10 +12,12 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Main extends Application {
 
@@ -30,20 +32,23 @@ public class Main extends Application {
 
     GridPane board;
     Label myName;
-    Label turnLabel;
+    Label winnerLabel;
 
-    volatile boolean myTurn;
-    volatile boolean gameOver = false;
+    //volatile boolean myTurn;
+    AtomicBoolean myTurn = new AtomicBoolean(false);
+    AtomicBoolean gameOver = new AtomicBoolean(false);
+
     Button save = new Button("Save");
+    HBox top;
 
     @Override
     public void start(Stage primaryStage) throws Exception{
         BorderPane pane = new BorderPane();
-        HBox top = new HBox(50);
+        top = new HBox(50);
         top.setPadding(new Insets(15,15,15,15));
         myName = new Label("Waiting for other Player");
-        turnLabel = new Label("...");
-        top.getChildren().addAll(myName, turnLabel);
+        winnerLabel = new Label("...");
+        top.getChildren().addAll(myName, winnerLabel);
         pane.setTop(top);
 
         pane.setBottom(save);
@@ -104,7 +109,7 @@ public class Main extends Application {
 
         //Setup Done
 
-        //Server Thread
+        //Server communication Thread
         new Thread(()->{
 
             try {
@@ -120,10 +125,11 @@ public class Main extends Application {
                 System.out.println("Player: " + playerNum);
 
                 if(playerNum==1){
-                    myTurn=true;
+                    myTurn.set(true);
+                    top.setBackground(new Background(new BackgroundFill(Color.rgb(0, 165, 205), CornerRadii.EMPTY, Insets.EMPTY)));
                 }
                 else{
-                    myTurn=false;
+                    myTurn.set(false);
                 }
 
                 Platform.runLater(() -> myName.setText("I am Player " + playerNum));
@@ -132,13 +138,14 @@ public class Main extends Application {
                 System.out.println(ex);
             }
 
-            while(!gameOver){
+            while(!gameOver.get()){
 
-                System.out.println(myTurn);
+                System.out.println(gameOver.get() + " <- game over? - my turn? -> " + myTurn);
 
                 synchronized (this) {
-                    while(myTurn){
+                    while(myTurn.get()){
                         try{
+                            System.out.println("Waiting for move..");
                             this.wait();
                         }catch (InterruptedException e){
                             //error
@@ -148,24 +155,25 @@ public class Main extends Application {
 
 
                     try {
-                        System.out.println("Player 2 right away");
                         score = (Integer[][])fromServer.readObject();
-                        System.out.println("Player 2 should have");
-                        System.out.print(score);
-                        if(score[0][0]==5){
+                        if(checkVictory(1)){
                             //p1 won
                             System.out.println("Player 1 won");
                             Platform.runLater(() -> {
                                 setOtherColor();
-                                gameOver = true;
+                                gameOver.set(true);
+                                winnerLabel.setText("You Lost :( Player 1 Won");
+                                pane.setBackground(new Background(new BackgroundFill(Color.rgb(255, 0, 0), CornerRadii.EMPTY, Insets.EMPTY)));
                             });
                         }
-                        else if(score[0][0]==6){
+                        else if(checkVictory(2)){
                             //p2 won
-                            System.out.println("Player 2 won");
+                            System.out.println("Player 2 Won");
                             Platform.runLater(() -> {
                                 setOtherColor();
-                                gameOver = true;
+                                gameOver.set(true);
+                                winnerLabel.setText("You Lost :( Player 1 Won");
+                                pane.setBackground(new Background(new BackgroundFill(Color.rgb(255, 0, 0), CornerRadii.EMPTY, Insets.EMPTY)));
                             });
                         }
                     } catch (IOException e) {
@@ -174,22 +182,22 @@ public class Main extends Application {
                         e.printStackTrace();
                     }
 
-                    myTurn = true;
+                    myTurn.set(true);
 
                     Platform.runLater(() -> {
                         setOtherColor();
+                        if(!gameOver.get()){
+                            top.setBackground(new Background(new BackgroundFill(Color.rgb(0, 165, 205), CornerRadii.EMPTY, Insets.EMPTY)));
+                        }
+
 
                     });
-
-
-
 
 
             }
 
         }).start();
 
-        System.out.println("Game OVER!");
 
     }
     //Show green or red outline depending on if allowed to place in slot
@@ -247,23 +255,37 @@ public class Main extends Application {
                 e.printStackTrace();
             }
 
-            //Writing move to server
+            //Writing move to server thread
             new Thread(()->{
 
                 try {
 
 
-                        //Sends board after move to server
-                        toServer.writeObject(score);
+                    //Sends board after move to server
+                    toServer.writeObject(score);
+
+                    if(checkVictory(playerNum)){
+                        gameOver.set(true);
+                        System.out.println("I won!");
+
+                    }
 
                     synchronized (this) {
-                        myTurn = false;
+                        if(gameOver.get()){
+                            winnerLabel.setText("You Win!");
+                            top.setBackground(new Background(new BackgroundFill(Color.rgb(50, 205, 50), CornerRadii.EMPTY, Insets.EMPTY)));
+                        }
+                        myTurn.set(false);
                         this.notifyAll();
                     }
                         //System.out.println("My turn: " + myTurn);
 
                         Platform.runLater(() -> {
                             setOtherColor();
+                            if(!gameOver.get()){
+                                top.setBackground(new Background(new BackgroundFill(Color.rgb(220, 220, 220), CornerRadii.EMPTY, Insets.EMPTY)));
+                            }
+
                         });
 
 
@@ -306,9 +328,10 @@ public class Main extends Application {
 
     private boolean allowedSquare(int x, int y){
 
-        System.out.println(gameOver);
+
+        //System.out.println("Game over: " + gameOver.get() + " My turn: " + myTurn);
         //makes sure the player isn't trying to click a taken slot
-        if(score[x][y] != 1 && score[x][y] != 2 && myTurn==true && !gameOver){
+        if(score[x][y] != 1 && score[x][y] != 2 && myTurn.get() && !gameOver.get()){
 
             //for bottom row
             if(score[5][y] == 0 && x == 5){
@@ -330,4 +353,78 @@ public class Main extends Application {
     public static void main(String[] args) {
         launch(args);
     }
+
+    public boolean checkVictory(int p){
+
+        int counter = 0;
+
+        //check across victory
+        for(int i=0;i<6;i++){
+
+            counter = 0;
+
+            for(int j=0;j<7;j++){
+
+                if(score[i][j] == p){
+                    counter++;
+                } else {
+                    counter = 0; //reset b/c not in order
+                }
+
+                if(counter > 3){
+                    return true;
+                }
+
+            }
+        }
+
+        counter = 0;
+
+        //check down victory
+        for(int i=0;i<7;i++){
+            counter = 0;
+
+            for(int j=0;j<6;j++){
+
+                if(score[j][i] == p) {
+                    counter++;
+                }else {
+                    counter = 0;
+                }
+                if(counter > 3){
+                    return true;
+                }
+
+
+            }
+        }
+
+        //Check diagonal up victory
+        for(int i=0;i<4;i++){
+            for(int j=3;j<6;j++){
+                //i is 4 and j is 3 to avoid Out of Bounds error when searching through array
+                if(score[j][i] == p && score[j-1][i+1] == p && score[j-2][i+2] == p && score[j-3][i+3] == p){
+                    return true;
+                    //won by diagonal upward
+                }
+
+            }
+        }
+
+        //check diagonal down victory
+        for(int i=0;i<4;i++){
+            for(int j=0;j<3;j++){
+                if(score[j][i] == p && score[j+1][i+1] == p && score[j+2][i+2] == p && score[j+3][i+3] == p){
+                    return true;
+                    //won by diagonal downward
+                }
+
+
+            }
+        }
+
+        return false; //did not win
+
+    }
+
 }

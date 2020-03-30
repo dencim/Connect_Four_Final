@@ -16,7 +16,7 @@ public class Server extends Application {
         new Thread(() ->{
             try {
                 ServerSocket server = new ServerSocket(8888);
-                //server.setReuseAddress(true);
+                server.setReuseAddress(true);
 
                 // The main thread is just accepting new connections
                 while (true) {

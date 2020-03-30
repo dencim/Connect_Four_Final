@@ -48,34 +48,31 @@ public class ClientHandler implements Runnable {
         while(true){
 
             try {
-                boardState = (Integer[][])inputFromP1.readObject();
-                outP2.writeObject(boardState);
-                outP2.flush();
 
-                if(checkVictory(1) == false){
+                    boardState = (Integer[][]) inputFromP1.readObject();
+                    outP2.writeObject(boardState);
+                    outP2.flush();
+
+                    /*boardState[0][0]=6;
+                    outP2.writeObject(boardState);
+                    outP2.flush();
+                    outP1.writeObject(boardState);
+                    outP1.flush();*/
+                if(!checkVictory(1)){
                     boardState = (Integer[][])inputFromP2.readObject();
                     outP1.writeObject(boardState);
                     outP1.flush();
                 }
                 else{
                     System.out.println("Player 1 won!");
-                    boardState[0][0]=5;
+                    /*boardState[0][0]=5;
                     outP2.writeObject(boardState);
                     outP2.flush();
                     outP1.writeObject(boardState);
-                    outP1.flush();
+                    outP1.flush();*/
                     break;
                 }
 
-                if(checkVictory(2)){
-                    System.out.println("Player 2 won!");
-                    boardState[0][0]=6;
-                    outP2.writeObject(boardState);
-                    outP2.flush();
-                    outP1.writeObject(boardState);
-                    outP1.flush();
-                    break;
-                }
 
 
 
