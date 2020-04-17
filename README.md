@@ -1,8 +1,13 @@
 # Connect_Four_Final
-Final Project. Connect 4 socket app using Java
+Connect 4 Application using JavaFx and Java Socket programming
 
-Group:
-Denis Cimic - Did Server code and game logic
-Lola Marinkovic - Did UI
-Heather Cooper - file output
-Zile Humma - worked on build.gradle and main
+
+Instructions:
+1. Run Server.java
+2. Run 2 Intstances of Main.java
+ -First instance will connect as Player 1, second will connect as Player 2
+3.Play
+
+
+Misc. More then one game can be played at a time. The server starts a new game in a new thread for each two clients that connect to it
+
