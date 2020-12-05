@@ -1,4 +1,4 @@
-# Connect_Four_Final
+# Connect Four - Java Socket Application
 Connect 4 Application using JavaFx and Java Socket programming
 
 <b>Demo</b> <br/>
