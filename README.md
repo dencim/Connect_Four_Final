@@ -1,5 +1,8 @@
 # Connect_Four_Final
 Connect 4 Application using JavaFx and Java Socket programming
+
+<b>Demo</b> <br/>
+<img src="connectFourGif.gif" alt="Demo" width="600" height="320">
  
  
 Instructions:
